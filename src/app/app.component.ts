@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
 import { MemberDataService } from './services/member-data.service';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-root',
@@ -8,38 +8,35 @@ import { MemberDataService } from './services/member-data.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'prop-mng';
   addPropertyModal: boolean = false;
   deletePropertyModal: boolean = false;
-  currProperties: any;
+  currUsers: any;
   currPage: number = 1;
   id: any;
-  status: string = 'LOADING...';
   searchText: string = '';
   selectAll: boolean = false;
-
-  properties: any;
+  faTrash = faTrash;
+  users: any;
 
   totalPages:any;
+  currSort: string = '';
+  sortOrder: string = '';
 
   constructor(private memberDataService: MemberDataService) {
   }
 
   async initData(){
-    this.status = 'LOADING...';
     (await this.memberDataService.getData()).subscribe((data: any) => {
       data.forEach((member: any) => {
         member.isSelected = false;
       });
-      this.properties = data;
-      console.log(this.properties);
-      this.totalPages = Math.ceil(this.properties.length/10);
+      this.users = data;
+      this.totalPages = Math.ceil(this.users.length/10);
       if(this.currPage>this.totalPages) {
         this.currPage = this.totalPages;
       }
-      this.currProperties = this.properties.slice((this.currPage * 10)-10, (this.currPage * 10));
-      this.id = this.properties[this.properties.length-1].Id;
-      this.status = '';
+      this.currUsers = this.users.slice((this.currPage * 10)-10, (this.currPage * 10));
+      this.id = this.users[this.users.length-1].Id;
     });
   }
 
@@ -49,67 +46,97 @@ export class AppComponent {
 
 
   async deleteProperty(id: number) {
-    this.status = 'DELETING...';
+    this.users = this.users.filter((prop: any) => {
+      return prop.id != id;
+    })
+    this.totalPages = Math.ceil(this.users.length/10);
+    if(this.currPage>this.totalPages) {
+      this.currPage = this.totalPages;
+    }
+    this.currUsers = this.users.slice((this.currPage * 10)-10, (this.currPage * 10));
   }
 
-  openModel(modal: string) {
-    if(modal === 'addProperty') {
-      this.addPropertyModal = true;
-    } else if(modal === 'deleteProperty') {
-      this.deletePropertyModal = true;
-    }
-  }
 
   gotoPage(page: number) {
     if(page>0 && page<=this.totalPages) {
-    this.currProperties = this.properties.slice((page * 10)-10, (page * 10));
-    console.log(this.currProperties);
+    this.currUsers = this.users.slice((page * 10)-10, (page * 10));
+    console.log(this.currUsers);
     this.currPage = page;
   }
-  if(this.properties?.length==0){
+  if(this.users?.length==0){
     console.log('no properties');
-    this.currProperties = [];
+    this.currUsers = [];
   }
   }
 
-  closeModal(){
-    this.addPropertyModal = false;
-    this.deletePropertyModal = false;
-  }
 
-  sortProp(){
-    let sortedProps = this.properties;
-
-    sortedProps.sort((a: any, b: any)=>{
-
-      console.log(a.size>b.size);
-      return a.size-b.size;
+  sortUsers(sortProp: string){
+    if(this.currSort==sortProp){
+      this.sortOrder = this.sortOrder=='asc'?'desc':'asc';
+    }else{
+      this.sortOrder = 'asc';
+    }
+    this.currSort = sortProp;
+    this.users.sort((a: any, b: any) => {
+      if(a[sortProp] < b[sortProp]){
+        return this.sortOrder == 'asc' ? -1 : 1;
+      }else if(a[sortProp] > b[sortProp]){
+        return this.sortOrder == 'asc' ? 1 : -1;
+      }else{
+        return 0;
+      }
     }
     );
-    console.log(sortedProps);
-    this.currProperties = sortedProps.slice((this.currPage * 10)-10, (this.currPage * 10)-1);
+    this.currUsers = this.users.slice((this.currPage * 10)-10, (this.currPage * 10));
   }
 
   getCounter(pages: Number){
-    // let counter = [];
-    // for(let i=1; i<=pages; i++){
-    //   counter.push(i);
-    // }
-    // return counter;
     return new Array(pages);
   }
 
   filterSearch(){
     if(this.searchText==''){
-      this.currProperties = this.properties.slice((this.currPage * 10)-10, (this.currPage * 10));
+      this.currUsers = this.users.slice((this.currPage * 10)-10, (this.currPage * 10));
     }else{
-      let filteredProps = this.properties.filter((prop: any)=>{
+      let filteredProps = this.users.filter((prop: any)=>{
         return prop.name.toLowerCase().includes(this.searchText.toLowerCase())||
         prop.email.toLowerCase().includes(this.searchText.toLowerCase())||
         prop.role.toLowerCase().includes(this.searchText.toLowerCase());
       }
       );
-      this.currProperties = filteredProps.slice((this.currPage * 10)-10, (this.currPage * 10));
+      this.currUsers = filteredProps.slice((this.currPage * 10)-10, (this.currPage * 10));
   }
+  }
+
+  deleteMultiple(){
+    this.selectAll = false;
+    let delIds:any = [];
+    console.log(this.users);
+    console.log(this.currUsers);
+
+    this.currUsers.map((prop: any)=>{
+      if(prop.isSelected){
+        delIds.push(Number(prop.id));
+      }
+    });
+
+    this.users = this.users.filter((prop: any)=>{
+      return !(delIds.includes(Number(prop.id)));
+    });
+
+    this.totalPages = Math.ceil(this.users.length/10);
+    if(this.currPage>this.totalPages) {
+      this.currPage = this.totalPages;
+    }
+    this.currUsers = this.users.slice((this.currPage * 10)-10, (this.currPage * 10));
+
+  }
+
+  selectAllUsers(){
+    this.selectAll = !this.selectAll;
+    this.currUsers.map((prop: any)=>{
+      prop.isSelected = this.selectAll;
+    }
+    );
   }
 }

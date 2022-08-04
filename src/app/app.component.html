@@ -10,24 +10,44 @@
     </div>
   <table class="table-container">
     <thead>
-      <tr>
-        <th><input [type]="'checkbox'" [checked]="selectAll" (change)="selectAll=!selectAll"></th>
+      <tr style="background-color: #a5a5a5">
+        <th><input [type]="'checkbox'" [checked]="selectAll" (change)="selectAllUsers()"></th>
         <th>
-          Name
+          <div class="header-container">
+            Name
+            <div (click)="sortUsers('name')" class="sort-arrow-container">
+              <div class="arrow up" [ngStyle]="{'opacity': currSort=='name'&& sortOrder=='asc'?0.3:1}"></div>
+              <div class="arrow down" [ngStyle]="{'opacity': currSort=='name'&& sortOrder=='desc'?0.3:1}"></div>
+            </div>
+          </div>
         </th>
         <th>
-          Email
+          <div class="header-container">
+            Email
+            <div (click)="sortUsers('email')" class="sort-arrow-container">
+              <div class="arrow up" [ngStyle]="{'opacity': currSort=='email'&& sortOrder=='asc'?0.3:1}"></div>
+              <div class="arrow down" [ngStyle]="{'opacity': currSort=='email'&& sortOrder=='desc'?0.3:1}"></div>
+            </div>
+          </div>
         </th>
         <th>
-          Role
+          <div class="header-container">
+            Role
+            <div (click)="sortUsers('role')" class="sort-arrow-container">
+              <div class="arrow up" [ngStyle]="{'opacity': currSort=='role'&& sortOrder=='asc'?0.3:1}"></div>
+              <div class="arrow down" [ngStyle]="{'opacity': currSort=='role'&& sortOrder=='desc'?0.3:1}"></div>
+            </div>
+          </div>
         </th>
         <th>
-          Actions
+          <div class="header-container">
+            Actions
+          </div>
         </th>
       </tr>
     </thead>
       <tbody>
-          <tr *ngFor="let property of currProperties" [ngClass]="{'row-selected': property.isSelected || selectAll}">
+          <tr *ngFor="let property of currUsers" [ngClass]="{'row-selected': property.isSelected || selectAll}">
             <td>
               <input [type]="'checkbox'" [checked]="property.isSelected || selectAll" (change)="property.isSelected=(!property.isSelected)">
             </td>
@@ -41,22 +61,23 @@
               {{property.role}}
             </td>
             <td [ngStyle]="{'text-align':'center'}">
-              <button ngClass="delete small-btn" (click)="deleteProperty(property.Id)">
-                Delete
-              </button>
+              <fa-icon style="cursor: pointer;" (click)="deleteProperty(property.id)" [icon]="faTrash"></fa-icon>
             </td>
           </tr>
       </tbody>
   </table>
+  <div *ngIf="!currUsers.length">
+    No records
+  </div>
     <div class="footer-container">
       <div class="del-container">
-        <button>Delete Selected</button>
+        <button (click)="deleteMultiple()">Delete Selected</button>
       </div>
         <div class="page-nav">
           <div><button [disabled]="currPage==1" [ngClass]="{'disabled':currPage==1,'pages':true}" (click)="gotoPage(1)">&lt;&lt;</button></div>
           <div><button [disabled]="currPage==1" [ngClass]="{'disabled':currPage==1,'pages':true}" (click)="gotoPage(currPage-1)">&lt;</button></div>
           <div *ngFor="let page of getCounter(totalPages);let i=index">
-            <button [ngClass]="'pages'" [disabled]="currPage==(1+i)" (click)="gotoPage(1+i)">{{1+i}}</button>
+            <button [ngClass]="{'disabled':currPage==(i+1),'pages':true}" [disabled]="currPage==(1+i)" (click)="gotoPage(1+i)">{{1+i}}</button>
           </div>
           <div><button [disabled]="currPage==totalPages" [ngClass]="{'disabled':currPage==totalPages,'pages':true}" (click)="gotoPage(currPage+1)">&gt;</button></div>
           <div><button [disabled]="currPage==totalPages" [ngClass]="{'disabled':currPage==totalPages,'pages':true}" (click)="gotoPage(totalPages)">&gt;&gt;</button></div>
